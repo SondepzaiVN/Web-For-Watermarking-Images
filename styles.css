@@ -1,0 +1,253 @@
+:root {
+  --bg-0: #f5f7ff;
+  --bg-1: #e6ecff;
+  --panel: #ffffff;
+  --ink: #111827;
+  --muted: #5b6474;
+  --line: #d8deec;
+  --accent: #f97316;
+  --accent-dark: #c2410c;
+  --ok: #0f766e;
+  --shadow: 0 12px 36px rgba(17, 24, 39, 0.09);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  background:
+    radial-gradient(circle at 10% 10%, #ffffff 0, #eef3ff 40%, transparent 70%),
+    linear-gradient(140deg, var(--bg-0), var(--bg-1));
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  letter-spacing: -0.03em;
+}
+
+.hero p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-top: 16px;
+}
+
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+}
+
+.grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+button,
+textarea {
+  font: inherit;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="file"],
+select {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 12px;
+}
+
+.checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding-top: 24px;
+}
+
+.actions {
+  display: flex;
+  align-items: end;
+}
+
+.actions.full {
+  grid-column: 1 / -1;
+}
+
+button {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 700;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+
+button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tab {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 180ms ease;
+}
+
+.result-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.result-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 180px;
+}
+
+.result-card h3 {
+  margin: 0 0 8px;
+  font-size: 0.97rem;
+}
+
+img {
+  width: 100%;
+  max-height: 340px;
+  object-fit: contain;
+  background: #f4f7ff;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+
+.download {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--ok);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.download.disabled {
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.decoded {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  min-height: 60px;
+  background: #f4f7ff;
+  border: 1px dashed var(--line);
+  font-family: "IBM Plex Mono", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log {
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  background: #fbfdff;
+  color: #1e293b;
+  min-height: 58px;
+  overflow: auto;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.86rem;
+  white-space: pre-wrap;
+}
+
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 860px) {
+  .grid.two,
+  .result-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-row {
+    padding-top: 6px;
+  }
+}

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watermark Studio Web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1>Watermark Studio</h1>
+        <p>GitHub Pages frontend calling your Hugging Face Space backend.</p>
+      </header>
+
+      <section class="panel connect-panel">
+        <h2>Connection</h2>
+        <div class="grid two">
+          <label>
+            Space ID
+            <input
+              id="spaceId"
+              type="text"
+              value="channelson4321/Watermarking-Image-Son"
+            />
+          </label>
+          <label>
+            Embed endpoint
+            <input id="embedEndpoint" type="text" value="/embed" />
+          </label>
+          <label>
+            Extract endpoint
+            <input id="extractEndpoint" type="text" value="/extract" />
+          </label>
+          <div class="actions">
+            <button id="connectBtn" type="button">Connect API</button>
+          </div>
+        </div>
+        <p class="hint">
+          Default uses named endpoints /embed and /extract. If needed, you can
+          still use endpoint indexes like 0 and 1.
+        </p>
+        <pre id="apiInfo" class="log"></pre>
+      </section>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="embed">Embed</button>
+        <button class="tab" data-tab="extract">Extract</button>
+      </div>
+
+      <section id="embed" class="panel tab-content active">
+        <h2>Embed</h2>
+        <form id="embedForm" class="grid two">
+          <label>
+            Host image
+            <input id="hostImage" type="file" accept="image/*" required />
+          </label>
+          <label>
+            Watermark image (for image mode)
+            <input id="watermarkImage" type="file" accept="image/*" />
+          </label>
+          <label>
+            Mode
+            <select id="mode">
+              <option value="image">image</option>
+              <option value="text">text</option>
+            </select>
+          </label>
+          <label>
+            Watermark text (for text mode)
+            <input id="watermarkText" type="text" value="Hello World" />
+          </label>
+          <label>
+            Alpha
+            <input
+              id="alpha"
+              type="number"
+              min="1"
+              max="500"
+              value="100"
+              step="1"
+            />
+          </label>
+          <label>
+            N (ROI)
+            <input
+              id="nRoi"
+              type="number"
+              min="1"
+              max="200"
+              value="12"
+              step="1"
+            />
+          </label>
+          <label>
+            Seed
+            <input id="seed" type="number" value="42" step="1" />
+          </label>
+          <label class="checkbox-row">
+            <input id="affine" type="checkbox" checked />
+            Use affine correction for extract
+          </label>
+          <div class="actions full">
+            <button id="embedBtn" type="submit">Run Embed</button>
+          </div>
+        </form>
+
+        <div class="result-grid">
+          <div class="result-card">
+            <h3>Watermarked image</h3>
+            <img id="embedImageOut" alt="Watermarked result" />
+            <a
+              id="embedImageDownload"
+              class="download"
+              target="_blank"
+              rel="noopener"
+              >Download image</a
+            >
+          </div>
+          <div class="result-card">
+            <h3>Metadata (.npz)</h3>
+            <a
+              id="metadataDownload"
+              class="download"
+              target="_blank"
+              rel="noopener"
+              >Download metadata</a
+            >
+          </div>
+        </div>
+
+        <pre id="embedLog" class="log"></pre>
+      </section>
+
+      <section id="extract" class="panel tab-content">
+        <h2>Extract</h2>
+        <form id="extractForm" class="grid two">
+          <label>
+            Image to extract from
+            <input id="suspectImage" type="file" accept="image/*" required />
+          </label>
+          <label>
+            Metadata (.npz)
+            <input id="metadataFile" type="file" accept=".npz" required />
+          </label>
+          <div class="actions full">
+            <button id="extractBtn" type="submit">Run Extract</button>
+          </div>
+        </form>
+
+        <div class="result-grid">
+          <div class="result-card">
+            <h3>Extracted watermark</h3>
+            <img id="extractImageOut" alt="Extracted watermark" />
+            <a
+              id="extractImageDownload"
+              class="download"
+              target="_blank"
+              rel="noopener"
+              >Download image</a
+            >
+          </div>
+          <div class="result-card">
+            <h3>Decoded text (text mode)</h3>
+            <p id="decodedText" class="decoded"></p>
+          </div>
+        </div>
+
+        <pre id="extractLog" class="log"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
