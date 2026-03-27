@@ -1,9 +1,5 @@
 # Watermark Studio Web
 
-This web app lets you embed and extract watermarks by calling a Hugging Face Space API.
-
-## Live Website
-
 - Website URL: https://sondepzaivn.github.io/Web-For-Watermarking-Images/
 
 ## How To Use
