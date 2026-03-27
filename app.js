@@ -29,7 +29,9 @@ const ui = {
 
   extractForm: document.getElementById("extractForm"),
   suspectImage: document.getElementById("suspectImage"),
+  suspectPreview: document.getElementById("suspectPreview"),
   metadataFile: document.getElementById("metadataFile"),
+  metadataPreview: document.getElementById("metadataPreview"),
   extractBtn: document.getElementById("extractBtn"),
   extractImageOut: document.getElementById("extractImageOut"),
   extractImageDownload: document.getElementById("extractImageDownload"),
@@ -44,17 +46,47 @@ function setLog(node, msg) {
   node.textContent = msg;
 }
 
-function setDownloadLink(anchor, fileData, fallbackName) {
+async function forceDownload(url, filename) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Download failed with status ${response.status}`);
+  }
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const temp = document.createElement("a");
+  temp.href = objectUrl;
+  temp.download = filename;
+  document.body.appendChild(temp);
+  temp.click();
+  temp.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+function setDownloadLink(anchor, fileData, fallbackName, logNode) {
   if (!fileData || !fileData.url) {
     anchor.classList.add("disabled");
     anchor.removeAttribute("href");
+    anchor.onclick = null;
     anchor.textContent = "No file available";
     return;
   }
+
+  const filename = fileData.orig_name || fallbackName;
   anchor.classList.remove("disabled");
   anchor.href = fileData.url;
-  anchor.download = fileData.orig_name || fallbackName;
-  anchor.textContent = `Download ${fileData.orig_name || fallbackName}`;
+  anchor.download = filename;
+  anchor.textContent = `Download ${filename}`;
+  anchor.onclick = async (event) => {
+    event.preventDefault();
+    try {
+      await forceDownload(fileData.url, filename);
+    } catch (err) {
+      if (logNode) {
+        setLog(logNode, `Download failed: ${err?.message || err}`);
+      }
+      window.open(fileData.url, "_blank", "noopener");
+    }
+  };
 }
 
 function parseEndpoint(input) {
@@ -70,14 +102,31 @@ function parseEndpoint(input) {
 
 function showPreview(fileInput, imageNode) {
   const file = fileInput.files?.[0];
+  const prevObjectUrl = imageNode.dataset.objectUrl;
+  if (prevObjectUrl) {
+    URL.revokeObjectURL(prevObjectUrl);
+    delete imageNode.dataset.objectUrl;
+  }
+
   if (!file) {
     imageNode.removeAttribute("src");
     imageNode.classList.remove("visible");
     return;
   }
   const url = URL.createObjectURL(file);
+  imageNode.dataset.objectUrl = url;
   imageNode.src = url;
   imageNode.classList.add("visible");
+}
+
+function showMetadataPreview(fileInput, infoNode) {
+  const file = fileInput.files?.[0];
+  if (!file) {
+    infoNode.textContent = "No file selected";
+    return;
+  }
+  const sizeKb = (file.size / 1024).toFixed(1);
+  infoNode.textContent = `${file.name}\n${sizeKb} KB`;
 }
 
 function normalizeFileData(value) {
@@ -165,8 +214,18 @@ async function runEmbed(event) {
     if (imageData && imageData.url) {
       ui.embedImageOut.src = imageData.url;
     }
-    setDownloadLink(ui.embedImageDownload, imageData, "watermarked.png");
-    setDownloadLink(ui.metadataDownload, metadataData, "metadata.npz");
+    setDownloadLink(
+      ui.embedImageDownload,
+      imageData,
+      "watermarked.png",
+      ui.embedLog,
+    );
+    setDownloadLink(
+      ui.metadataDownload,
+      metadataData,
+      "metadata.npz",
+      ui.embedLog,
+    );
     setLog(ui.embedLog, String(embedLog || "Embed complete."));
   } catch (err) {
     setLog(ui.embedLog, `Embed failed: ${err?.message || err}`);
@@ -210,7 +269,12 @@ async function runExtract(event) {
     }
 
     ui.decodedText.textContent = decodedText || "";
-    setDownloadLink(ui.extractImageDownload, imageData, "extracted.png");
+    setDownloadLink(
+      ui.extractImageDownload,
+      imageData,
+      "extracted.png",
+      ui.extractLog,
+    );
     setLog(ui.extractLog, String(extractLog || "Extract complete."));
   } catch (err) {
     setLog(ui.extractLog, `Extract failed: ${err?.message || err}`);
@@ -246,6 +310,12 @@ function bootstrap() {
   ui.watermarkImage.addEventListener("change", () => {
     showPreview(ui.watermarkImage, ui.watermarkPreview);
   });
+  ui.suspectImage.addEventListener("change", () => {
+    showPreview(ui.suspectImage, ui.suspectPreview);
+  });
+  ui.metadataFile.addEventListener("change", () => {
+    showMetadataPreview(ui.metadataFile, ui.metadataPreview);
+  });
 
   ensureClient().catch(() => {
     // Lazy reconnect on Embed/Extract if initial auto-connect fails.
@@ -255,9 +325,14 @@ function bootstrap() {
   ui.extractForm.addEventListener("submit", runExtract);
 
   // Set disabled style by default.
-  setDownloadLink(ui.embedImageDownload, null, "watermarked.png");
-  setDownloadLink(ui.metadataDownload, null, "metadata.npz");
-  setDownloadLink(ui.extractImageDownload, null, "extracted.png");
+  setDownloadLink(ui.embedImageDownload, null, "watermarked.png", ui.embedLog);
+  setDownloadLink(ui.metadataDownload, null, "metadata.npz", ui.embedLog);
+  setDownloadLink(
+    ui.extractImageDownload,
+    null,
+    "extracted.png",
+    ui.extractLog,
+  );
 }
 
 bootstrap();

@@ -104,6 +104,19 @@ select {
   display: block;
 }
 
+.file-preview {
+  margin: 6px 0 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed var(--line);
+  background: #f4f7ff;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .checkbox-row {
   flex-direction: row;
   align-items: center;

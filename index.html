@@ -120,10 +120,16 @@
           <label>
             Image to extract from
             <input id="suspectImage" type="file" accept="image/*" required />
+            <img
+              id="suspectPreview"
+              class="input-preview"
+              alt="Suspect preview"
+            />
           </label>
           <label>
             Metadata (.npz)
             <input id="metadataFile" type="file" accept=".npz" required />
+            <p id="metadataPreview" class="file-preview">No file selected</p>
           </label>
           <div class="actions full">
             <button id="extractBtn" type="submit">Run Extract</button>
