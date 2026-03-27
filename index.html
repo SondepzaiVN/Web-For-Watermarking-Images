@@ -19,36 +19,6 @@
         <p>GitHub Pages frontend calling your Hugging Face Space backend.</p>
       </header>
 
-      <section class="panel connect-panel">
-        <h2>Connection</h2>
-        <div class="grid two">
-          <label>
-            Space ID
-            <input
-              id="spaceId"
-              type="text"
-              value="channelson4321/Watermarking-Image-Son"
-            />
-          </label>
-          <label>
-            Embed endpoint
-            <input id="embedEndpoint" type="text" value="/embed" />
-          </label>
-          <label>
-            Extract endpoint
-            <input id="extractEndpoint" type="text" value="/extract" />
-          </label>
-          <div class="actions">
-            <button id="connectBtn" type="button">Connect API</button>
-          </div>
-        </div>
-        <p class="hint">
-          Default uses named endpoints /embed and /extract. If needed, you can
-          still use endpoint indexes like 0 and 1.
-        </p>
-        <pre id="apiInfo" class="log"></pre>
-      </section>
-
       <div class="tabs">
         <button class="tab active" data-tab="embed">Embed</button>
         <button class="tab" data-tab="extract">Extract</button>
@@ -60,10 +30,16 @@
           <label>
             Host image
             <input id="hostImage" type="file" accept="image/*" required />
+            <img id="hostPreview" class="input-preview" alt="Host preview" />
           </label>
           <label>
             Watermark image (for image mode)
             <input id="watermarkImage" type="file" accept="image/*" />
+            <img
+              id="watermarkPreview"
+              class="input-preview"
+              alt="Watermark preview"
+            />
           </label>
           <label>
             Mode

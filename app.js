@@ -3,16 +3,18 @@ import {
   handle_file,
 } from "https://cdn.jsdelivr.net/npm/@gradio/client@1.9.0/dist/index.min.js";
 
-const ui = {
-  spaceId: document.getElementById("spaceId"),
-  embedEndpoint: document.getElementById("embedEndpoint"),
-  extractEndpoint: document.getElementById("extractEndpoint"),
-  connectBtn: document.getElementById("connectBtn"),
-  apiInfo: document.getElementById("apiInfo"),
+const API_CONFIG = {
+  spaceId: "channelson4321/Watermarking-Image-Son",
+  embedEndpoint: "/embed",
+  extractEndpoint: "/extract",
+};
 
+const ui = {
   embedForm: document.getElementById("embedForm"),
   hostImage: document.getElementById("hostImage"),
+  hostPreview: document.getElementById("hostPreview"),
   watermarkImage: document.getElementById("watermarkImage"),
+  watermarkPreview: document.getElementById("watermarkPreview"),
   mode: document.getElementById("mode"),
   watermarkText: document.getElementById("watermarkText"),
   alpha: document.getElementById("alpha"),
@@ -36,6 +38,7 @@ const ui = {
 };
 
 let client = null;
+let connectPromise = null;
 
 function setLog(node, msg) {
   node.textContent = msg;
@@ -65,6 +68,18 @@ function parseEndpoint(input) {
   return raw;
 }
 
+function showPreview(fileInput, imageNode) {
+  const file = fileInput.files?.[0];
+  if (!file) {
+    imageNode.removeAttribute("src");
+    imageNode.classList.remove("visible");
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  imageNode.src = url;
+  imageNode.classList.add("visible");
+}
+
 function normalizeFileData(value) {
   if (!value) {
     return null;
@@ -82,19 +97,30 @@ function normalizeFileData(value) {
 }
 
 async function connectClient() {
-  const space = ui.spaceId.value.trim();
-  if (!space) {
-    throw new Error("Space ID is required");
+  client = await Client.connect(API_CONFIG.spaceId);
+  return client;
+}
+
+async function ensureClient() {
+  if (client) {
+    return client;
   }
-  client = await Client.connect(space);
-  const api = await client.view_api(true);
-  setLog(ui.apiInfo, JSON.stringify(api, null, 2));
+  if (!connectPromise) {
+    connectPromise = connectClient().catch((err) => {
+      connectPromise = null;
+      throw err;
+    });
+  }
+  return connectPromise;
 }
 
 async function runEmbed(event) {
   event.preventDefault();
-  if (!client) {
-    setLog(ui.embedLog, "Connect API first.");
+
+  try {
+    await ensureClient();
+  } catch (err) {
+    setLog(ui.embedLog, `Cannot connect to API: ${err?.message || err}`);
     return;
   }
 
@@ -118,7 +144,7 @@ async function runEmbed(event) {
   );
 
   try {
-    const endpoint = parseEndpoint(ui.embedEndpoint.value);
+    const endpoint = parseEndpoint(API_CONFIG.embedEndpoint);
     const payload = [
       handle_file(hostFile),
       mode,
@@ -151,8 +177,11 @@ async function runEmbed(event) {
 
 async function runExtract(event) {
   event.preventDefault();
-  if (!client) {
-    setLog(ui.extractLog, "Connect API first.");
+
+  try {
+    await ensureClient();
+  } catch (err) {
+    setLog(ui.extractLog, `Cannot connect to API: ${err?.message || err}`);
     return;
   }
 
@@ -170,7 +199,7 @@ async function runExtract(event) {
   );
 
   try {
-    const endpoint = parseEndpoint(ui.extractEndpoint.value);
+    const endpoint = parseEndpoint(API_CONFIG.extractEndpoint);
     const payload = [handle_file(suspectFile), handle_file(metadataFile)];
     const result = await client.predict(endpoint, payload);
     const [imageOut, decodedText, extractLog] = result.data;
@@ -210,16 +239,16 @@ function setupTabs() {
 
 function bootstrap() {
   setupTabs();
-  ui.connectBtn.addEventListener("click", async () => {
-    ui.connectBtn.disabled = true;
-    setLog(ui.apiInfo, "Connecting...");
-    try {
-      await connectClient();
-    } catch (err) {
-      setLog(ui.apiInfo, `Connect failed: ${err?.message || err}`);
-    } finally {
-      ui.connectBtn.disabled = false;
-    }
+
+  ui.hostImage.addEventListener("change", () => {
+    showPreview(ui.hostImage, ui.hostPreview);
+  });
+  ui.watermarkImage.addEventListener("change", () => {
+    showPreview(ui.watermarkImage, ui.watermarkPreview);
+  });
+
+  ensureClient().catch(() => {
+    // Lazy reconnect on Embed/Extract if initial auto-connect fails.
   });
 
   ui.embedForm.addEventListener("submit", runEmbed);
