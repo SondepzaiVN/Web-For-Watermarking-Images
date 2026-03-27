@@ -2,6 +2,7 @@ import {
   Client,
   handle_file,
 } from "https://cdn.jsdelivr.net/npm/@gradio/client@1.9.0/dist/index.min.js";
+import * as UTIF from "https://esm.sh/utif@3.1.0";
 
 const API_CONFIG = {
   spaceId: "channelson4321/Watermarking-Image-Son",
@@ -100,7 +101,60 @@ function parseEndpoint(input) {
   return raw;
 }
 
-function showPreview(fileInput, imageNode) {
+function isTiffFile(file) {
+  const lowerName = (file?.name || "").toLowerCase();
+  const mime = (file?.type || "").toLowerCase();
+  return (
+    lowerName.endsWith(".tif") ||
+    lowerName.endsWith(".tiff") ||
+    mime === "image/tiff" ||
+    mime === "image/x-tiff"
+  );
+}
+
+async function tiffFileToObjectUrl(file) {
+  const buffer = await file.arrayBuffer();
+  const ifds = UTIF.decode(buffer);
+  if (!ifds || ifds.length === 0) {
+    throw new Error("No TIFF frame found");
+  }
+
+  const first = ifds[0];
+  UTIF.decodeImage(buffer, first);
+  const rgba = UTIF.toRGBA8(first);
+
+  const width = first.width || first.t256;
+  const height = first.height || first.t257;
+  if (!width || !height) {
+    throw new Error("Invalid TIFF dimensions");
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas context unavailable");
+  }
+
+  const imageData = new ImageData(new Uint8ClampedArray(rgba), width, height);
+  ctx.putImageData(imageData, 0, 0);
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) {
+        resolve(b);
+      } else {
+        reject(new Error("Failed to convert TIFF preview"));
+      }
+    }, "image/png");
+  });
+
+  return URL.createObjectURL(blob);
+}
+
+async function showPreview(fileInput, imageNode) {
   const file = fileInput.files?.[0];
   const prevObjectUrl = imageNode.dataset.objectUrl;
   if (prevObjectUrl) {
@@ -113,7 +167,19 @@ function showPreview(fileInput, imageNode) {
     imageNode.classList.remove("visible");
     return;
   }
-  const url = URL.createObjectURL(file);
+
+  let url;
+  if (isTiffFile(file)) {
+    try {
+      // Decode TIFF to PNG for browsers that cannot render TIFF in img tags.
+      url = await tiffFileToObjectUrl(file);
+    } catch (_err) {
+      url = URL.createObjectURL(file);
+    }
+  } else {
+    url = URL.createObjectURL(file);
+  }
+
   imageNode.dataset.objectUrl = url;
   imageNode.src = url;
   imageNode.classList.add("visible");
@@ -305,13 +371,13 @@ function bootstrap() {
   setupTabs();
 
   ui.hostImage.addEventListener("change", () => {
-    showPreview(ui.hostImage, ui.hostPreview);
+    void showPreview(ui.hostImage, ui.hostPreview);
   });
   ui.watermarkImage.addEventListener("change", () => {
-    showPreview(ui.watermarkImage, ui.watermarkPreview);
+    void showPreview(ui.watermarkImage, ui.watermarkPreview);
   });
   ui.suspectImage.addEventListener("change", () => {
-    showPreview(ui.suspectImage, ui.suspectPreview);
+    void showPreview(ui.suspectImage, ui.suspectPreview);
   });
   ui.metadataFile.addEventListener("change", () => {
     showMetadataPreview(ui.metadataFile, ui.metadataPreview);
