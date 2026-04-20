@@ -6,8 +6,8 @@ import * as UTIF from "https://esm.sh/utif@3.1.0";
 
 const API_CONFIG = {
   spaceId: "channelson4321/Watermarking-Image-Son",
-  embedEndpoint: "/embed",
-  extractEndpoint: "/extract",
+  embedEndpoint: "/run_embed",
+  extractEndpoint: "/run_extract",
 };
 
 const ui = {
